@@ -1,0 +1,30 @@
+---
+- hosts: all
+  vars:
+    force_ignore_lock: "{{force_ignore_lock}}"
+    lock_file_path: /tmp/ansible-kenyaemr-deploy.lock
+  name: Deploy the server
+  pre_tasks:
+    - name: Create deploy user
+      ansible.builtin.user:
+        groups: "www-data,sudo"
+        state: present
+        name: "{{deploy_user}}"
+      become: yes
+
+  post_tasks:
+    - name: Deploy successful, remove lock_file
+      ansible.builtin.file:
+        path: "{{lock_file_path}}"
+        state: absent
+      become: yes
+
+  roles:
+    - common
+    - sudoers
+    - mysql
+    - prelude
+    - tomcat
+    - caddy
+    - openmrs
+    - kenya_emr

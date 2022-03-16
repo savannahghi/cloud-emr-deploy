@@ -1,0 +1,117 @@
+---
+
+- name: Download tomcat
+  ansible.builtin.get_url:
+    dest: "/home/{{ server_user }}/Downloads/apache_tomcat.zip"
+    force: yes
+    owner: "{{ server_user }}"
+    url: "{{ tomcat_download_url }}"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Create tomcat sever directory
+  ansible.builtin.file:
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    path: "/opt/apache_tomcat/"
+    state: directory
+  become: yes
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Unzip the server
+  ansible.builtin.unarchive:
+    dest: "/opt/apache_tomcat/"
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    remote_src: yes
+    src: "/home/{{ server_user }}/Downloads/apache_tomcat.zip"
+  become: yes
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Make all tomcat scripts excecutable
+  ansible.builtin.file:
+    group: "{{ deploy_group }}"
+    mode: u=rwx,g=rwx,o=rx
+    owner: "{{ server_user }}"
+    path: "/opt/apache_tomcat/apache-tomcat-{{ tomcat_version }}/bin"
+    recurse: yes
+    state: directory
+  become: yes
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Create catalina base and env directories
+  ansible.builtin.file:
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    path: "{{ item }}"
+    state: directory
+  loop:
+      - "/home/{{ server_user }}/envs"
+      - "/home/{{ server_user }}/tomcat"
+      - "/home/{{ server_user }}/tomcat/bin"
+      - "/home/{{ server_user }}/tomcat/conf"
+      - "/home/{{ server_user }}/tomcat/logs"
+      - "/home/{{ server_user }}/tomcat/webapps"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Setup catalina base and env scripts
+  ansible.builtin.template:
+    backup: yes
+    dest: "{{ item.dest }}"
+    force: yes
+    group: "{{ deploy_group }}"
+    mode: u=rwx,g=rwx,o=rx
+    owner: "{{ server_user }}"
+    src: "{{ item.src }}"
+  loop:
+      - {src: "shutdown.sh", dest: "/home/{{ server_user }}/tomcat/bin"}
+      - {src: "startup.sh", dest: "/home/{{ server_user }}/tomcat/bin"}
+      - {src: "tomcat_env.sh", dest: "/home/{{ server_user }}/envs"}
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Copy server configuration files
+  ansible.builtin.template:
+    backup: yes
+    force: yes
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    src: "{{ item }}"
+    dest: "/home/{{ server_user }}/tomcat/conf"
+  loop:
+    - catalina.properties
+    - context.xml
+    - logging.properties
+    - server.xml
+    - tomcat-users.xml
+    - web.xml
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Copy server systemd service file
+  ansible.builtin.template:
+    backup: yes
+    dest: "/lib/systemd/system/tomcat.service"
+    force: yes
+    src: "tomcat.service"
+  become: yes
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Reload systemctl daemon, to pick up new files
+  ansible.builtin.shell: "systemctl daemon-reload"
+  become: yes
+  tags: ["deploy", "central_emr", "tomcat"]
+
+- name: Ensure tomcat service is (re)started
+  ansible.builtin.systemd:
+    enabled: yes
+    force: yes
+    name: tomcat
+    state: restarted
+  become: yes
+  tags: ["deploy", "central_emr", "tomcat"]

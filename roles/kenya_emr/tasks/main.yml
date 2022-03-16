@@ -1,0 +1,67 @@
+---
+
+- name: Create OpenMRS config directory
+  ansible.builtin.file:
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    path: "/home/{{ server_user }}/.OpenMRS"
+    state: directory
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "emr", "kenya_emr"]
+
+- name: Copy KenyaEMR 'omod' files to OpenMRS config dir
+  ansible.builtin.copy:
+    backup: no
+    dest: "/home/{{ server_user }}/.OpenMRS"
+    force: yes
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    remote_src: yes
+    src: "/home/{{ server_user }}/{{ server_archive_name }}/modules"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "emr", "kenya_emr"]
+
+- name: "Create datatool and etl databases"
+  community.mysql.mysql_db:
+    login_password: "{{ db_password }}"
+    login_user: "{{ db_user }}"
+    name: "{{ item }}"
+    state: present
+  loop:
+    - kenyaemr_datatools
+    - kenyaemr_etl
+  tags: ["deploy", "emr", "kenya_emr"]
+
+- name: Copy KenyaEMR and associated tools dbs dumps to remote machine
+  ansible.builtin.copy:
+    backup: no
+    dest: "/home/{{ server_user }}/Downloads/{{ item.dest }}"
+    force: yes
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    remote_src: no
+    src: "{{ item.src }}"
+  become: yes
+  become_user: "{{ server_user }}"
+  loop:
+    - { src: templates/kenyaemr_datatools.sql, dest: "kenyaemr_datatools.sql" }
+    - { src: templates/kenyaemr_etl.sql, dest: "kenyaemr_etl.sql" }
+    - { src: templates/openmrs.sql, dest: "openmrs.sql" }
+  tags: ["deploy", "emr", "kenya_emr"]
+
+- name: Restore KenyaEMR db dumps into associated prod dbs
+  community.mysql.mysql_db:
+    login_password: "{{ db_password }}"
+    login_user: "{{ db_user }}"
+    name: "{{ item.db_name }}"
+    state: import
+    target: "/home/{{ server_user }}/Downloads/{{ item.db_dump_file }}"
+  become: yes
+  become_user: "{{ server_user }}"
+  loop:
+    - { db_dump_file: kenyaemr_datatools.sql, db_name: kenyaemr_datatools }
+    - { db_dump_file: kenyaemr_etl.sql, db_name: kenyaemr_etl }
+    - { db_dump_file: openmrs.sql, db_name: openmrs }
+  tags: ["deploy", "emr", "kenya_emr"]

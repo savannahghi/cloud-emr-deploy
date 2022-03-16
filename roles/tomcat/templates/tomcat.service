@@ -1,0 +1,18 @@
+[Unit]
+Description=Apache Tomcat 9 Web Application Server
+Documentation=https://tomcat.apache.org/tomcat-9.0-doc/index.html
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=forking
+User={{ server_user }}
+Group={{ deploy_group }}
+WorkingDirectory=/home/{{ server_user }}
+ExecStart=/home/{{ server_user }}/tomcat/bin/startup.sh
+ExecStop=/home/{{ server_user }}/tomcat/bin/shutdown.sh
+SuccessExitStatus=143
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

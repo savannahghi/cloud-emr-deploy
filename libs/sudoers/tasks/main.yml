@@ -1,0 +1,14 @@
+---
+- name: Current user can become others without pwd
+  ansible.builtin.template: 
+    dest: '/etc/sudoers.d/{{ lookup("env","USER") }}'
+    src: "user.sudoers.d.j2"
+  become: yes
+  tags: ["sudoers"]
+
+- name: Deploy user can become others without pwd
+  ansible.builtin.template: 
+    dest: "/etc/sudoers.d/{{ deploy_user }}"
+    src: "deploy_user.sudoers.d.j2"
+  become: yes 
+  tags: ["sudoers"]

@@ -1,0 +1,43 @@
+---
+
+- name: Add server user
+  ansible.builtin.user:
+    append: yes
+    create_home: yes
+    groups: "{{ deploy_group }}"
+    name: "{{ server_user }}"
+    password: "{{ server_user_password }}"
+    shell: /bin/bash
+    state: present
+    update_password: always
+  become: yes
+  tags: ["deploy", "central_emr", "prelude"]
+
+- name: Create a downloads directory for the server user
+  ansible.builtin.file:
+    owner: "{{ server_user }}"
+    path: "/home/{{ server_user }}/Downloads"
+    state: directory
+  become: yes
+  tags: ["deploy", "central_emr", "prelude"]
+
+- name: Download emr server and modules
+  ansible.builtin.get_url:
+    dest: "/home/{{ server_user }}/Downloads/central_emr.zip"
+    force: yes
+    owner: "{{ server_user }}"
+    url: "{{ server_download_url }}"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "central_emr", "prelude"]
+
+- name: Unzip the emr server and modules
+  ansible.builtin.unarchive:
+    dest: "/home/{{ server_user }}/"
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    remote_src: yes
+    src: "/home/{{ server_user }}/Downloads/central_emr.zip"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "central_emr", "prelude"]

@@ -1,0 +1,18 @@
+---
+- name: "Copy global MySQL configuration"
+  ansible.builtin.copy:
+    backup: yes
+    dest: "/etc/mysql/my.cnf"
+    force: yes
+    remote_src: no
+    src: "templates/my.cnf"
+  become: yes
+  tags: ["mysql"]
+
+- name: "Enable and restart MySQL service"
+  ansible.builtin.service:
+    enabled: yes
+    name: mysql
+    state: restarted
+  become: yes
+  tags: ["mysql"]

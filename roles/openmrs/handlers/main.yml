@@ -1,0 +1,10 @@
+---
+
+- name: Restart tomcat
+  ansible.builtin.systemd:
+    enabled: yes
+    force: yes
+    name: tomcat
+    state: restarted
+  become: yes
+  tags: ["deploy", "emr", "openmrs"]

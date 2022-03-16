@@ -1,0 +1,11 @@
+---
+# Settings for the production hosts
+db_name: "{{ vault_db_name }}"
+db_password: "{{ vault_db_password }}"
+db_user: "{{ vault_db_user }}"
+host_domain: play.emr.fahariyajamii.org
+server_port: "{{ vault_server_port }}"
+server_download_url: https://github.com/palladiumkenya/kenyahmis-releases/releases/download/v49/KenyaEMR_18.1.2.zip
+server_user: "{{ vault_server_user }}"
+server_user_password: "{{ vault_server_user_password }}"
+

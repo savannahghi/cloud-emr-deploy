@@ -1,0 +1,30 @@
+- name: Copy caddy file to /etc/caddy/Caddyfile
+  ansible.builtin.template:
+    backup: "yes"
+    dest: "/etc/caddy/Caddyfile"
+    force: "yes"
+    group: "caddy"
+    owner: "caddy"
+    src: Caddyfile.j2
+  become: yes
+  tags: ["deploy", "emr", "caddy"]
+
+- name: Restart caddy
+  ansible.builtin.systemd:
+    daemon_reload: "yes"
+    enabled: "yes"
+    name: caddy
+    state: restarted
+  become: yes
+  tags: ["deploy", "emr", "caddy"]
+
+- name: Create a folder for caddy server logs
+  ansible.builtin.file:
+    group: "{{ deploy_group }}"
+    mode: "0777"
+    owner: "{{ server_user }}"
+    path: "/var/log/caddy"
+    recurse: yes
+    state: directory
+  become: yes
+  tags: ["deploy", "emr", "caddy"]

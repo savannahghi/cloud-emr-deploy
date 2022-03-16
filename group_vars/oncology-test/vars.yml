@@ -1,0 +1,9 @@
+---
+# Settings for the production hosts
+db_name: "{{ vault_db_name }}"
+db_password: "{{ vault_db_password }}"
+db_user: "{{ vault_db_user }}"
+host_domain: oncology-openmrs.savannahghi.org
+server_port: "{{ vault_server_port }}"
+server_user: "{{ vault_server_user }}"
+server_user_password: "{{ vault_server_user_password }}"

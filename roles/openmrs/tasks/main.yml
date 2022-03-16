@@ -1,0 +1,44 @@
+---
+
+- name: Copy Open MRS war to catalina base webapps dir
+  ansible.builtin.copy:
+    backup: yes
+    dest: /home/{{ server_user }}/tomcat/webapps/openmrs.war
+    force: yes
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    remote_src: yes
+    src: "/home/{{ server_user }}/{{ server_archive_name }}/webapps/openmrs.war"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "emr", "openmrs"]
+
+- name: Create database user
+  community.mysql.mysql_user:
+    login_unix_socket: "/var/run/mysqld/mysqld.sock"
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: '*.*:ALL,GRANT'
+    state: present
+  become: yes
+  tags: ["deploy", "emr", "openmrs"]
+
+- name: Create application database
+  community.mysql.mysql_db:
+    login_password: "{{ db_password }}"
+    login_user: "{{ db_user }}"
+    name: "{{ db_name }}"
+    state: present
+  tags: ["deploy", "emr", "openmrs"]
+
+- name: Copy OpenMRS runtime properties
+  ansible.builtin.template:
+    backup: yes
+    dest: "/home/{{ server_user }}"
+    force: yes
+    group: "{{ deploy_group }}"
+    owner: "{{ server_user }}"
+    src: "openmrs-runtime.properties"
+  become: yes
+  become_user: "{{ server_user }}"
+  tags: ["deploy", "emr", "openmrs"]
