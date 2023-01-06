@@ -4,7 +4,7 @@ ansible_python_interpreter: /usr/bin/python3
 deploy_group: "{{ vault_deploy_group }}"
 deploy_user: "{{ vault_deploy_user }}"
 mysql_apt_download_url: https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
-server_archive_name: KenyaEMR_18.3.0
-server_download_url: https://github.com/palladiumkenya/kenyahmis-releases/releases/download/v55/KenyaEMR_18.3.0.zip
+server_archive_name: KenyaEMR_18.1.2
+server_download_url: https://github.com/palladiumkenya/kenyahmis-releases/releases/download/v49/KenyaEMR_18.1.2.zip
 tomcat_download_url: https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.68/bin/apache-tomcat-9.0.68.zip
 tomcat_version: "9.0.68"

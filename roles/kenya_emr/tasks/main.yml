@@ -37,18 +37,19 @@
 - name: Copy KenyaEMR and associated tools dbs dumps to remote machine
   ansible.builtin.copy:
     backup: no
-    dest: "/home/{{ server_user }}/Downloads/{{ item.dest }}"
-    force: yes
-    group: "{{ deploy_group }}"
-    owner: "{{ server_user }}"
+    dest: "/tmp/kenyaemr_dbs.tar.xz"
     remote_src: no
-    src: "{{ item.src }}"
+    src: kenyaemr_dbs.tar.xz
   become: yes
-  become_user: "{{ server_user }}"
-  loop:
-    - { src: templates/kenyaemr_datatools.sql, dest: "kenyaemr_datatools.sql" }
-    - { src: templates/kenyaemr_etl.sql, dest: "kenyaemr_etl.sql" }
-    - { src: templates/openmrs.sql, dest: "openmrs.sql" }
+  tags: ["deploy", "emr", "kenya_emr"]
+
+- name: Unarchive the KenyaEMR and associated tools dbs dumps
+  ansible.builtin.unarchive:
+    dest: "/tmp"
+    keep_newer: yes
+    remote_src: yes
+    src: /tmp/kenyaemr_dbs.tar.xz
+  become: yes
   tags: ["deploy", "emr", "kenya_emr"]
 
 - name: Restore KenyaEMR db dumps into associated prod dbs
@@ -57,11 +58,10 @@
     login_user: "{{ db_user }}"
     name: "{{ item.db_name }}"
     state: import
-    target: "/home/{{ server_user }}/Downloads/{{ item.db_dump_file }}"
+    target: "{{ item.db_dump_file }}"
   become: yes
-  become_user: "{{ server_user }}"
   loop:
-    - { db_dump_file: kenyaemr_datatools.sql, db_name: kenyaemr_datatools }
-    - { db_dump_file: kenyaemr_etl.sql, db_name: kenyaemr_etl }
-    - { db_dump_file: openmrs.sql, db_name: openmrs }
+    - { db_dump_file: /tmp/kenyaemr_datatools.sql, db_name: kenyaemr_datatools }
+    - { db_dump_file: /tmp/kenyaemr_etl.sql, db_name: kenyaemr_etl }
+    - { db_dump_file: /tmp/openmrs.sql, db_name: openmrs }
   tags: ["deploy", "emr", "kenya_emr"]
